@@ -3,20 +3,17 @@ import { useStore } from '../context/StoreContext';
 import { 
   Package, 
   CheckCircle2, 
-  Clock, 
   Truck, 
   MapPin, 
   Download, 
   X, 
   AlertCircle, 
   ArrowRight, 
-  ChevronRight,
-  ShieldCheck
 } from 'lucide-react';
-import { Order, OrderStatus } from '../types';
+import { Order } from '../types';
 
-export const OrdersView: React.FC = () => {
-  const { orders, updateOrderStatus, setActiveTab, selectedOrderId, setSelectedOrderId, showToast } = useStore();
+export const OrdersView: React.FC = React.memo(() => {
+  const { orders, updateOrderStatus, setActiveTab, selectedOrderId, showToast } = useStore();
   const [activeTrackingOrder, setActiveTrackingOrder] = useState<Order | null>(() => {
     if (selectedOrderId) {
       return orders.find((o) => o.id === selectedOrderId) || null;
@@ -38,7 +35,7 @@ export const OrdersView: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div 
           id="empty-orders-state"
-          className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 text-center max-w-lg mx-auto shadow-sm space-y-4"
+          className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 text-center max-w-lg mx-auto shadow-xs space-y-4"
         >
           <div className="w-20 h-20 bg-blue-50 text-[#2874f0] rounded-full flex items-center justify-center mx-auto">
             <Package className="w-10 h-10" />
@@ -48,8 +45,12 @@ export const OrdersView: React.FC = () => {
             Looks like you haven't placed an order yet. Discover top deals and shop your favorite products today.
           </p>
           <button
+            type="button"
             id="empty-orders-shop-btn"
-            onClick={() => setActiveTab('store')}
+            onClick={() => {
+              setActiveTab('store');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             className="bg-[#2874f0] hover:bg-blue-700 text-white font-extrabold px-8 py-3 rounded-sm uppercase tracking-wider text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
           >
             <span>Start Shopping</span>
@@ -62,7 +63,7 @@ export const OrdersView: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-6 space-y-6">
-      <div className="bg-white rounded border border-gray-200 shadow-sm p-4 flex items-center justify-between">
+      <div className="bg-white rounded border border-gray-200 shadow-xs p-4 flex items-center justify-between">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
             <Package className="w-5 h-5 text-[#2874f0]" />
@@ -81,7 +82,7 @@ export const OrdersView: React.FC = () => {
             <div
               key={order.id}
               id={`order-card-${order.id}`}
-              className="bg-white rounded border border-gray-200 shadow-sm p-4 sm:p-5 space-y-4"
+              className="bg-white rounded border border-gray-200 shadow-xs p-4 sm:p-5 space-y-4"
             >
               {/* Order Header */}
               <div className="flex items-center justify-between flex-wrap gap-2 border-b pb-3">
@@ -126,6 +127,10 @@ export const OrdersView: React.FC = () => {
                       <img
                         src={item.productImage}
                         alt=""
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&auto=format&fit=crop&q=80';
+                        }}
                         className="w-14 h-14 object-contain bg-gray-50 border rounded p-1"
                       />
                       <div>
@@ -160,18 +165,20 @@ export const OrdersView: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     id={`track-order-btn-${order.id}`}
                     onClick={() => setActiveTrackingOrder(order)}
-                    className="bg-blue-50 text-[#2874f0] font-bold px-3 py-1.5 rounded hover:bg-blue-100 transition-colors flex items-center gap-1"
+                    className="bg-blue-50 text-[#2874f0] font-bold px-3 py-1.5 rounded hover:bg-blue-100 transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <Truck className="w-3.5 h-3.5" />
                     <span>Track Order</span>
                   </button>
 
                   <button
+                    type="button"
                     id={`download-invoice-btn-${order.id}`}
                     onClick={() => handleDownloadInvoice(order.id)}
-                    className="border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded hover:bg-gray-50 transition-colors flex items-center gap-1"
+                    className="border border-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded hover:bg-gray-50 transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Invoice</span>
@@ -179,9 +186,10 @@ export const OrdersView: React.FC = () => {
 
                   {!isDelivered && !isCancelled && (
                     <button
+                      type="button"
                       id={`cancel-order-btn-${order.id}`}
                       onClick={() => handleCancelOrder(order.id)}
-                      className="text-rose-600 hover:text-rose-800 font-semibold px-2 py-1.5"
+                      className="text-rose-600 hover:text-rose-800 font-semibold px-2 py-1.5 cursor-pointer"
                     >
                       Cancel Order
                     </button>
@@ -203,8 +211,9 @@ export const OrdersView: React.FC = () => {
                 <h3 className="font-bold text-sm">Ekart Logistics Delivery Tracker</h3>
               </div>
               <button
+                type="button"
                 onClick={() => setActiveTrackingOrder(null)}
-                className="text-white/80 hover:text-white"
+                className="text-white/80 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -261,8 +270,9 @@ export const OrdersView: React.FC = () => {
 
             <div className="bg-gray-50 px-5 py-3 border-t text-right">
               <button
+                type="button"
                 onClick={() => setActiveTrackingOrder(null)}
-                className="bg-[#2874f0] text-white text-xs font-bold px-4 py-2 rounded"
+                className="bg-[#2874f0] text-white text-xs font-bold px-4 py-2 rounded cursor-pointer"
               >
                 Close Tracking
               </button>
@@ -272,4 +282,6 @@ export const OrdersView: React.FC = () => {
       )}
     </div>
   );
-};
+});
+OrdersView.displayName = 'OrdersView';
+

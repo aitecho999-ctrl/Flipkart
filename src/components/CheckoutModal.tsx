@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { 
   X, 
-  CheckCircle2, 
   CreditCard, 
   Smartphone, 
-  Building, 
   Banknote, 
-  ShieldCheck, 
   Lock, 
   ArrowRight, 
-  Sparkles 
 } from 'lucide-react';
 
 interface CheckoutModalProps {
@@ -18,7 +14,7 @@ interface CheckoutModalProps {
   onClose: () => void;
 }
 
-export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
+export const CheckoutModal: React.FC<CheckoutModalProps> = React.memo(({ isOpen, onClose }) => {
   const { cart, appliedCoupon, shippingAddress, createOrder, setActiveTab, setSelectedOrderId } = useStore();
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'NET_BANKING' | 'COD' | 'PAY_LATER'>('UPI');
   const [upiId, setUpiId] = useState('user@okaxis');
@@ -48,8 +44,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       if (order) {
         setSelectedOrderId(order.id);
         setActiveTab('orders');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    }, 1200);
+    }, 1000);
   };
 
   return (
@@ -62,11 +59,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
         <div className="bg-[#2874f0] text-white px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4" />
-            <h3 className="text-base font-bold">Safe & Secure Checkout</h3>
+            <h3 className="text-base font-bold">Safe &amp; Secure Checkout</h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10"
+            className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -99,7 +97,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
               {cart.map((item) => (
                 <div key={item.id} className="flex items-center justify-between pt-1.5 first:pt-0">
                   <div className="flex items-center gap-2 truncate">
-                    <img src={item.product.image} alt="" className="w-7 h-7 object-contain rounded" />
+                    <img
+                      src={item.product.image}
+                      alt=""
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=80';
+                      }}
+                      className="w-7 h-7 object-contain rounded"
+                    />
                     <span className="truncate max-w-[240px] text-gray-800 font-medium">
                       {item.product.title} (x{item.quantity})
                     </span>
@@ -171,7 +177,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
                   <span className="font-bold text-gray-900 flex items-center gap-1.5">
                     <CreditCard className="w-4 h-4 text-[#2874f0]" /> Credit / Debit / ATM Card
                   </span>
-                  <p className="text-gray-500 mt-0.5">Visa, MasterCard, RuPay & American Express</p>
+                  <p className="text-gray-500 mt-0.5">Visa, MasterCard, RuPay &amp; American Express</p>
                   {paymentMethod === 'CARD' && (
                     <div className="mt-2 space-y-2">
                       <input
@@ -239,6 +245,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
           </div>
 
           <button
+            type="button"
             id="confirm-place-order-btn"
             onClick={handleConfirmOrder}
             disabled={isProcessing}
@@ -248,7 +255,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
               <span>Processing Payment...</span>
             ) : (
               <>
-                <span>Confirm & Pay</span>
+                <span>Confirm &amp; Pay</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -257,4 +264,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       </div>
     </div>
   );
-};
+});
+CheckoutModal.displayName = 'CheckoutModal';
+

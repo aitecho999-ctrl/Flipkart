@@ -12,17 +12,12 @@ import {
   CheckCircle2, 
   Tag, 
   ArrowLeft, 
-  Share2, 
   ThumbsUp, 
-  Truck, 
-  RotateCcw, 
-  CreditCard 
 } from 'lucide-react';
 
-export const ProductDetail: React.FC = () => {
+export const ProductDetail: React.FC = React.memo(() => {
   const { 
     selectedProduct, 
-    setSelectedProduct, 
     setActiveTab, 
     addToCart, 
     toggleWishlist, 
@@ -35,8 +30,12 @@ export const ProductDetail: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <p className="text-gray-500">No product selected.</p>
         <button
-          onClick={() => setActiveTab('store')}
-          className="mt-4 bg-[#2874f0] text-white px-4 py-2 rounded text-sm font-semibold"
+          type="button"
+          onClick={() => {
+            setActiveTab('store');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="mt-4 bg-[#2874f0] text-white px-4 py-2 rounded text-sm font-semibold cursor-pointer"
         >
           Back to Store
         </button>
@@ -49,6 +48,7 @@ export const ProductDetail: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState(selectedProduct.sizeVariants?.[0] || '');
   const [pincode, setPincode] = useState('560034');
   const [pincodeVerified, setPincodeVerified] = useState(true);
+  const [imgError, setImgError] = useState(false);
 
   // Reviews state
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
@@ -56,7 +56,6 @@ export const ProductDetail: React.FC = () => {
   const [newReview, setNewReview] = useState({ rating: 5, title: '', comment: '', userName: '' });
 
   const wishlisted = isInWishlist(selectedProduct.id);
-
   const allImages = [selectedProduct.image, ...(selectedProduct.additionalImages || [])];
 
   const handleAddToCart = () => {
@@ -66,6 +65,7 @@ export const ProductDetail: React.FC = () => {
   const handleBuyNow = () => {
     addToCart(selectedProduct, 1, selectedColor, selectedSize);
     setActiveTab('cart');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePincodeCheck = (e: React.FormEvent) => {
@@ -106,9 +106,13 @@ export const ProductDetail: React.FC = () => {
       {/* Back to Products Navigation */}
       <div className="flex items-center justify-between mb-4">
         <button
+          type="button"
           id="back-to-store-btn"
-          onClick={() => setActiveTab('store')}
-          className="flex items-center gap-1.5 text-xs font-bold text-[#2874f0] hover:text-blue-800 cursor-pointer bg-white px-3 py-1.5 rounded shadow-sm border border-gray-200"
+          onClick={() => {
+            setActiveTab('store');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="flex items-center gap-1.5 text-xs font-bold text-[#2874f0] hover:text-blue-800 cursor-pointer bg-white px-3 py-1.5 rounded shadow-xs border border-gray-200"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Catalog</span>
@@ -120,7 +124,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-xs p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Image Gallery & Buy Actions */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex gap-3">
@@ -130,13 +134,14 @@ export const ProductDetail: React.FC = () => {
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     id={`thumb-img-${idx}`}
                     onClick={() => setActiveImage(img)}
-                    className={`w-14 h-14 rounded border-2 overflow-hidden p-1 bg-gray-50 transition-all ${
+                    className={`w-14 h-14 rounded border-2 overflow-hidden p-1 bg-gray-50 transition-all cursor-pointer ${
                       activeImage === img ? 'border-[#2874f0]' : 'border-gray-200 hover:border-gray-400'
                     }`}
                   >
-                    <img src={img} alt="Thumbnail" className="w-full h-full object-contain" />
+                    <img src={img} alt="Thumbnail" loading="lazy" className="w-full h-full object-contain" />
                   </button>
                 ))}
               </div>
@@ -146,16 +151,18 @@ export const ProductDetail: React.FC = () => {
             <div className="relative flex-1 min-h-[320px] sm:min-h-[420px] rounded border border-gray-200 bg-white p-4 flex items-center justify-center">
               <img
                 id="main-product-image"
-                src={activeImage}
+                src={imgError ? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80' : activeImage}
                 alt={selectedProduct.title}
+                onError={() => setImgError(true)}
                 className="max-h-[380px] w-auto object-contain transition-transform duration-300 hover:scale-105"
               />
 
               {/* Wishlist Button */}
               <button
+                type="button"
                 id="pdp-wishlist-toggle"
                 onClick={() => toggleWishlist(selectedProduct)}
-                className="absolute top-3 right-3 p-2 rounded-full bg-white shadow-md border border-gray-200 hover:bg-gray-50 text-gray-400"
+                className="absolute top-3 right-3 p-2 rounded-full bg-white shadow-md border border-gray-200 hover:bg-gray-50 text-gray-400 cursor-pointer"
               >
                 <Heart
                   className={`w-5 h-5 ${
@@ -169,6 +176,7 @@ export const ProductDetail: React.FC = () => {
           {/* Action Buttons: ADD TO CART & BUY NOW */}
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
+              type="button"
               id="pdp-add-to-cart-btn"
               onClick={handleAddToCart}
               className="bg-[#ff9f00] hover:bg-amber-600 text-white font-extrabold py-3 px-4 rounded-sm uppercase tracking-wider text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
@@ -178,6 +186,7 @@ export const ProductDetail: React.FC = () => {
             </button>
 
             <button
+              type="button"
               id="pdp-buy-now-btn"
               onClick={handleBuyNow}
               className="bg-[#fb641b] hover:bg-orange-700 text-white font-extrabold py-3 px-4 rounded-sm uppercase tracking-wider text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
@@ -216,7 +225,7 @@ export const ProductDetail: React.FC = () => {
                 <Star className="w-3 h-3 fill-white text-white" />
               </div>
               <span className="text-xs font-semibold text-gray-500">
-                {selectedProduct.ratingCount.toLocaleString('en-IN')} Ratings & {selectedProduct.reviewCount.toLocaleString('en-IN')} Reviews
+                {selectedProduct.ratingCount.toLocaleString('en-IN')} Ratings &amp; {selectedProduct.reviewCount.toLocaleString('en-IN')} Reviews
               </span>
               {selectedProduct.isAssured && (
                 <span className="text-xs font-black italic text-[#2874f0] bg-blue-50 px-2 py-0.5 rounded border border-blue-200 inline-flex items-center gap-1">
@@ -258,7 +267,7 @@ export const ProductDetail: React.FC = () => {
             <div className="space-y-1.5 text-xs text-gray-700">
               <div className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">Bank Offer:</span>
-                <span>10% Instant Discount on HDFC & SBI Credit Cards, up to ₹1,500 on orders of ₹5,000+</span>
+                <span>10% Instant Discount on HDFC &amp; SBI Credit Cards, up to ₹1,500 on orders of ₹5,000+</span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">Partner Offer:</span>
@@ -279,10 +288,11 @@ export const ProductDetail: React.FC = () => {
                 {selectedProduct.colorVariants.map((c) => (
                   <button
                     key={c}
+                    type="button"
                     onClick={() => setSelectedColor(c)}
-                    className={`text-xs px-3 py-1.5 rounded border font-medium transition-all ${
+                    className={`text-xs px-3 py-1.5 rounded border font-medium transition-all cursor-pointer ${
                       selectedColor === c
-                        ? 'border-[#2874f0] bg-blue-50 text-[#2874f0] font-bold shadow-sm'
+                        ? 'border-[#2874f0] bg-blue-50 text-[#2874f0] font-bold shadow-xs'
                         : 'border-gray-300 hover:border-gray-400 text-gray-700'
                     }`}
                   >
@@ -300,10 +310,11 @@ export const ProductDetail: React.FC = () => {
                 {selectedProduct.sizeVariants.map((s) => (
                   <button
                     key={s}
+                    type="button"
                     onClick={() => setSelectedSize(s)}
-                    className={`text-xs px-3 py-1.5 rounded border font-medium transition-all ${
+                    className={`text-xs px-3 py-1.5 rounded border font-medium transition-all cursor-pointer ${
                       selectedSize === s
-                        ? 'border-[#2874f0] bg-blue-50 text-[#2874f0] font-bold shadow-sm'
+                        ? 'border-[#2874f0] bg-blue-50 text-[#2874f0] font-bold shadow-xs'
                         : 'border-gray-300 hover:border-gray-400 text-gray-700'
                     }`}
                   >
@@ -331,7 +342,7 @@ export const ProductDetail: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="text-xs font-bold text-[#2874f0] hover:text-blue-800 px-2 py-1"
+                  className="text-xs font-bold text-[#2874f0] hover:text-blue-800 px-2 py-1 cursor-pointer"
                 >
                   Check
                 </button>
@@ -382,11 +393,12 @@ export const ProductDetail: React.FC = () => {
           {/* Ratings & Customer Reviews Section */}
           <div className="pt-4 border-t space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-900">Ratings & Reviews</h3>
+              <h3 className="text-base font-bold text-gray-900">Ratings &amp; Reviews</h3>
               <button
+                type="button"
                 id="write-review-toggle-btn"
                 onClick={() => setShowReviewForm(!showReviewForm)}
-                className="text-xs font-bold text-[#2874f0] border border-[#2874f0] px-3 py-1.5 rounded hover:bg-blue-50 transition-colors"
+                className="text-xs font-bold text-[#2874f0] border border-[#2874f0] px-3 py-1.5 rounded hover:bg-blue-50 transition-colors cursor-pointer"
               >
                 {showReviewForm ? 'Cancel Review' : 'Rate Product'}
               </button>
@@ -404,7 +416,7 @@ export const ProductDetail: React.FC = () => {
                         type="button"
                         key={star}
                         onClick={() => setNewReview({ ...newReview, rating: star })}
-                        className="p-1 text-amber-500"
+                        className="p-1 text-amber-500 cursor-pointer"
                       >
                         <Star className={`w-5 h-5 ${star <= newReview.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
                       </button>
@@ -450,7 +462,7 @@ export const ProductDetail: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="bg-[#2874f0] hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs uppercase tracking-wider"
+                  className="bg-[#2874f0] hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs uppercase tracking-wider cursor-pointer"
                 >
                   Submit Review
                 </button>
@@ -479,8 +491,9 @@ export const ProductDetail: React.FC = () => {
                       <span>• {rev.date}</span>
                     </div>
                     <button
+                      type="button"
                       onClick={() => showToast('Marked review as helpful')}
-                      className="flex items-center gap-1 hover:text-gray-700 text-gray-400"
+                      className="flex items-center gap-1 hover:text-gray-700 text-gray-400 cursor-pointer"
                     >
                       <ThumbsUp className="w-3 h-3" />
                       <span>{rev.helpfulCount > 0 ? rev.helpfulCount : ''} Helpful</span>
@@ -494,4 +507,6 @@ export const ProductDetail: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+ProductDetail.displayName = 'ProductDetail';
+

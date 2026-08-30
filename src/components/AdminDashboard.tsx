@@ -18,7 +18,7 @@ import {
   X
 } from 'lucide-react';
 
-export const AdminDashboard: React.FC = () => {
+export const AdminDashboard: React.FC = React.memo(() => {
   const { 
     products, 
     addProduct, 
@@ -590,4 +590,5 @@ export const AdminDashboard: React.FC = () => {
       )}
     </div>
   );
-};
+});
+AdminDashboard.displayName = 'AdminDashboard';

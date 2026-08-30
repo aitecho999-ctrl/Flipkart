@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../context/StoreContext';
 import { CheckoutModal } from './CheckoutModal';
 import { 
@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 
-export const CartView: React.FC = () => {
+export const CartView: React.FC = React.memo(() => {
   const {
     cart,
     updateCartQuantity,
@@ -37,11 +37,16 @@ export const CartView: React.FC = () => {
   const [showAddressEdit, setShowAddressEdit] = useState(false);
   const [addressForm, setAddressForm] = useState(shippingAddress);
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const originalSubtotal = cart.reduce(
-    (acc, item) => acc + (item.product.originalPrice || item.product.price) * item.quantity,
-    0
-  );
+  const subtotal = useMemo(() => {
+    return cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  }, [cart]);
+
+  const originalSubtotal = useMemo(() => {
+    return cart.reduce(
+      (acc, item) => acc + (item.product.originalPrice || item.product.price) * item.quantity,
+      0
+    );
+  }, [cart]);
 
   const productDiscount = Math.max(0, originalSubtotal - subtotal);
   const couponDiscount = appliedCoupon
@@ -51,25 +56,31 @@ export const CartView: React.FC = () => {
   const totalSavings = productDiscount + couponDiscount;
   const finalPayable = Math.max(0, subtotal - couponDiscount);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (!couponInput) return;
-    applyCoupon(couponInput);
-  };
+    if (!couponInput.trim()) return;
+    applyCoupon(couponInput.trim());
+  }, [couponInput, applyCoupon]);
 
-  const handleSaveAddress = (e: React.FormEvent) => {
+  const handleSaveAddress = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     setShippingAddress(addressForm);
     setShowAddressEdit(false);
     showToast('Delivery address updated!');
-  };
+  }, [addressForm, setShippingAddress, showToast]);
+
+  const handleProductClick = useCallback((product: any) => {
+    setSelectedProduct(product);
+    setActiveTab('product_detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [setSelectedProduct, setActiveTab]);
 
   if (cart.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div 
           id="empty-cart-state"
-          className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 text-center max-w-lg mx-auto shadow-sm space-y-4"
+          className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 text-center max-w-lg mx-auto shadow-xs space-y-4"
         >
           <div className="w-20 h-20 bg-blue-50 text-[#2874f0] rounded-full flex items-center justify-center mx-auto">
             <ShoppingBag className="w-10 h-10" />
@@ -79,8 +90,12 @@ export const CartView: React.FC = () => {
             Explore our vast catalog of smartphones, electronics, fashion, and home appliances with exclusive discounts.
           </p>
           <button
+            type="button"
             id="empty-cart-shop-btn"
-            onClick={() => setActiveTab('store')}
+            onClick={() => {
+              setActiveTab('store');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             className="bg-[#2874f0] hover:bg-blue-700 text-white font-extrabold px-8 py-3 rounded-sm uppercase tracking-wider text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
           >
             <span>Shop Now</span>
@@ -97,7 +112,7 @@ export const CartView: React.FC = () => {
         {/* Left Column: Delivery Address & Cart Items */}
         <div className="lg:col-span-8 space-y-4">
           {/* Deliver To Address Box */}
-          <div className="bg-white rounded border border-gray-200 p-4 shadow-sm flex items-center justify-between flex-wrap gap-3">
+          <div className="bg-white rounded border border-gray-200 p-4 shadow-xs flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-2.5">
               <MapPin className="w-4 h-4 text-[#2874f0] mt-0.5" />
               <div>
@@ -115,9 +130,10 @@ export const CartView: React.FC = () => {
             </div>
 
             <button
+              type="button"
               id="change-address-btn"
               onClick={() => setShowAddressEdit(!showAddressEdit)}
-              className="text-xs font-bold text-[#2874f0] border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded transition-all"
+              className="text-xs font-bold text-[#2874f0] border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded transition-all cursor-pointer"
             >
               {showAddressEdit ? 'Close' : 'Change Address'}
             </button>
@@ -171,15 +187,15 @@ export const CartView: React.FC = () => {
               />
               <button
                 type="submit"
-                className="bg-[#2874f0] text-white font-bold px-4 py-1.5 rounded text-xs"
+                className="bg-[#2874f0] text-white font-bold px-4 py-1.5 rounded text-xs cursor-pointer"
               >
-                Save & Deliver Here
+                Save &amp; Deliver Here
               </button>
             </form>
           )}
 
           {/* Cart Items List */}
-          <div className="bg-white rounded border border-gray-200 shadow-sm divide-y divide-gray-200">
+          <div className="bg-white rounded border border-gray-200 shadow-xs divide-y divide-gray-200">
             <div className="p-4 bg-slate-50/70 flex items-center justify-between">
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
                 Flipkart Shopping Cart ({cart.length})
@@ -193,15 +209,16 @@ export const CartView: React.FC = () => {
               <div key={item.id} id={`cart-item-${item.id}`} className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
                 {/* Item Image */}
                 <div 
-                  onClick={() => {
-                    setSelectedProduct(item.product);
-                    setActiveTab('product_detail');
-                  }}
+                  onClick={() => handleProductClick(item.product)}
                   className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 bg-gray-50 border rounded p-1 flex items-center justify-center cursor-pointer group"
                 >
                   <img
                     src={item.product.image}
                     alt={item.product.title}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&auto=format&fit=crop&q=80';
+                    }}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                   />
                 </div>
@@ -211,10 +228,7 @@ export const CartView: React.FC = () => {
                   <div>
                     <div className="flex items-start justify-between gap-2">
                       <h3 
-                        onClick={() => {
-                          setSelectedProduct(item.product);
-                          setActiveTab('product_detail');
-                        }}
+                        onClick={() => handleProductClick(item.product)}
                         className="text-sm font-semibold text-gray-900 line-clamp-2 hover:text-[#2874f0] cursor-pointer"
                       >
                         {item.product.title}
@@ -257,9 +271,10 @@ export const CartView: React.FC = () => {
                   <div className="flex items-center justify-between flex-wrap gap-3 mt-4 pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-2">
                       <button
+                        type="button"
                         id={`qty-minus-${item.id}`}
                         onClick={() => updateCartQuantity(item.id, -1)}
-                        className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 text-gray-700 transition-colors"
+                        className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 text-gray-700 transition-colors cursor-pointer"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
@@ -267,9 +282,10 @@ export const CartView: React.FC = () => {
                         {item.quantity}
                       </span>
                       <button
+                        type="button"
                         id={`qty-plus-${item.id}`}
                         onClick={() => updateCartQuantity(item.id, 1)}
-                        className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 text-gray-700 transition-colors"
+                        className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 text-gray-700 transition-colors cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -277,19 +293,21 @@ export const CartView: React.FC = () => {
 
                     <div className="flex items-center gap-4 text-xs font-bold">
                       <button
+                        type="button"
                         id={`save-for-later-${item.id}`}
                         onClick={() => {
                           toggleWishlist(item.product);
                           removeFromCart(item.id);
                         }}
-                        className="text-gray-700 hover:text-[#2874f0] uppercase tracking-wider"
+                        className="text-gray-700 hover:text-[#2874f0] uppercase tracking-wider cursor-pointer"
                       >
                         Save for later
                       </button>
                       <button
+                        type="button"
                         id={`remove-cart-item-${item.id}`}
                         onClick={() => removeFromCart(item.id)}
-                        className="text-rose-600 hover:text-rose-800 uppercase tracking-wider flex items-center gap-1"
+                        className="text-rose-600 hover:text-rose-800 uppercase tracking-wider flex items-center gap-1 cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
@@ -302,6 +320,7 @@ export const CartView: React.FC = () => {
             {/* Place Order CTA Bottom Bar */}
             <div className="p-4 bg-white flex items-center justify-end">
               <button
+                type="button"
                 id="cart-place-order-btn"
                 onClick={() => setIsCheckoutOpen(true)}
                 className="bg-[#fb641b] hover:bg-orange-600 text-white font-extrabold px-8 py-3 rounded-sm uppercase tracking-wider text-sm shadow-md transition-all cursor-pointer flex items-center gap-2"
@@ -316,15 +335,16 @@ export const CartView: React.FC = () => {
         {/* Right Column: Coupons & Price Details Summary */}
         <div className="lg:col-span-4 space-y-4">
           {/* Apply Coupon Box */}
-          <div className="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-3">
+          <div className="bg-white rounded border border-gray-200 p-4 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
-                <Tag className="w-4 h-4 text-[#2874f0]" /> Coupons & Offers
+                <Tag className="w-4 h-4 text-[#2874f0]" /> Coupons &amp; Offers
               </span>
               {appliedCoupon && (
                 <button
+                  type="button"
                   onClick={removeCoupon}
-                  className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-0.5"
+                  className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-0.5 cursor-pointer"
                 >
                   <X className="w-3 h-3" /> Remove
                 </button>
@@ -350,7 +370,7 @@ export const CartView: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="bg-[#2874f0] hover:bg-blue-700 text-white font-bold px-3 py-2 rounded text-xs uppercase"
+                  className="bg-[#2874f0] hover:bg-blue-700 text-white font-bold px-3 py-2 rounded text-xs uppercase cursor-pointer"
                 >
                   Apply
                 </button>
@@ -379,7 +399,7 @@ export const CartView: React.FC = () => {
           </div>
 
           {/* Price Details Summary Card */}
-          <div className="bg-white rounded border border-gray-200 shadow-sm p-4 space-y-3">
+          <div className="bg-white rounded border border-gray-200 shadow-xs p-4 space-y-3">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide border-b pb-2">
               Price Details
             </h3>
@@ -436,4 +456,6 @@ export const CartView: React.FC = () => {
       <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
     </div>
   );
-};
+});
+CartView.displayName = 'CartView';
+

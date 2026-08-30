@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { Camera, Upload, X, Sparkles, Check, ArrowRight } from 'lucide-react';
+import { Camera, Upload, X, Sparkles } from 'lucide-react';
 
 const SAMPLE_SEARCH_IMAGES = [
   {
@@ -29,13 +29,28 @@ const SAMPLE_SEARCH_IMAGES = [
   },
 ];
 
-export const ImageSearchModal: React.FC = () => {
-  const { isImageSearchOpen, setIsImageSearchOpen, products, setFilters, setActiveTab, setSelectedProduct } = useStore();
+export const ImageSearchModal: React.FC = React.memo(() => {
+  const { isImageSearchOpen, setIsImageSearchOpen, setFilters, setActiveTab } = useStore();
   const [selectedSample, setSelectedSample] = useState<typeof SAMPLE_SEARCH_IMAGES[0] | null>(null);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [, setUploadedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
   if (!isImageSearchOpen) return null;
+
+  const triggerSearchAnalysis = (keyword: string, category: string) => {
+    setAnalyzing(true);
+    setTimeout(() => {
+      setAnalyzing(false);
+      setFilters((prev) => ({
+        ...prev,
+        category: category || 'all',
+        searchQuery: keyword || '',
+      }));
+      setIsImageSearchOpen(false);
+      setActiveTab('store');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 800);
+  };
 
   const handleSelectSample = (sample: typeof SAMPLE_SEARCH_IMAGES[0]) => {
     setSelectedSample(sample);
@@ -56,20 +71,6 @@ export const ImageSearchModal: React.FC = () => {
     }
   };
 
-  const triggerSearchAnalysis = (keyword: string, category: string) => {
-    setAnalyzing(true);
-    setTimeout(() => {
-      setAnalyzing(false);
-      setFilters((prev) => ({
-        ...prev,
-        category: category || 'all',
-        searchQuery: keyword || '',
-      }));
-      setIsImageSearchOpen(false);
-      setActiveTab('store');
-    }, 1000);
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3">
       <div className="bg-white rounded-lg max-w-lg w-full overflow-hidden shadow-2xl border border-gray-200 animate-in fade-in zoom-in-95">
@@ -79,8 +80,9 @@ export const ImageSearchModal: React.FC = () => {
             <h3 className="font-bold text-sm sm:text-base">Flipkart Visual Image Search</h3>
           </div>
           <button
+            type="button"
             onClick={() => setIsImageSearchOpen(false)}
-            className="text-white/80 hover:text-white"
+            className="text-white/80 hover:text-white cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -95,7 +97,7 @@ export const ImageSearchModal: React.FC = () => {
           <label className="border-2 border-dashed border-blue-300 hover:border-[#2874f0] bg-blue-50/50 hover:bg-blue-50 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-all">
             <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
             <Upload className="w-8 h-8 text-[#2874f0] mb-2" />
-            <span className="text-xs font-bold text-gray-800">Click or Drag & Drop Product Image</span>
+            <span className="text-xs font-bold text-gray-800">Click or Drag &amp; Drop Product Image</span>
             <span className="text-[10px] text-gray-400 mt-0.5">Supports JPG, PNG, WEBP</span>
           </label>
 
@@ -113,7 +115,15 @@ export const ImageSearchModal: React.FC = () => {
                       : 'border-gray-200 hover:border-gray-400'
                   }`}
                 >
-                  <img src={sample.image} alt="" className="w-full h-14 object-cover rounded mb-1" />
+                  <img
+                    src={sample.image}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80';
+                    }}
+                    className="w-full h-14 object-cover rounded mb-1"
+                  />
                   <p className="text-[10px] font-semibold text-gray-700 truncate">{sample.name}</p>
                 </div>
               ))}
@@ -133,8 +143,9 @@ export const ImageSearchModal: React.FC = () => {
 
         <div className="bg-gray-50 px-5 py-3 border-t text-right">
           <button
+            type="button"
             onClick={() => setIsImageSearchOpen(false)}
-            className="text-xs font-semibold text-gray-600 hover:text-gray-900 px-3 py-1.5"
+            className="text-xs font-semibold text-gray-600 hover:text-gray-900 px-3 py-1.5 cursor-pointer"
           >
             Cancel
           </button>
@@ -142,4 +153,6 @@ export const ImageSearchModal: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+ImageSearchModal.displayName = 'ImageSearchModal';
+

@@ -1,19 +1,16 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from './ProductCard';
 import { 
   Filter, 
   RotateCcw, 
-  Star, 
   ShieldCheck, 
   SlidersHorizontal, 
   Timer, 
   Sparkles, 
-  ChevronRight,
-  Layers
 } from 'lucide-react';
 
-export const ProductList: React.FC = () => {
+export const ProductList: React.FC = React.memo(() => {
   const { products, filters, setFilters, resetFilters } = useStore();
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
@@ -37,7 +34,7 @@ export const ProductList: React.FC = () => {
     products.forEach((p) => {
       if (p.brand) brandSet.add(p.brand);
     });
-    return Array.from(brandSet);
+    return Array.from(brandSet).sort();
   }, [products]);
 
   // Filter and sort products
@@ -96,7 +93,7 @@ export const ProductList: React.FC = () => {
       });
   }, [products, filters]);
 
-  const handleBrandToggle = (brand: string) => {
+  const handleBrandToggle = useCallback((brand: string) => {
     setFilters((prev) => {
       const exists = prev.brands.includes(brand);
       return {
@@ -104,7 +101,7 @@ export const ProductList: React.FC = () => {
         brands: exists ? prev.brands.filter((b) => b !== brand) : [...prev.brands, brand],
       };
     });
-  };
+  }, [setFilters]);
 
   const activeFilterCount =
     (filters.category !== 'all' ? 1 : 0) +
@@ -118,7 +115,7 @@ export const ProductList: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
       {/* Deals of the Day Flash Strip */}
-      <div className="bg-white rounded-t border border-b-0 border-gray-200 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+      <div className="bg-white rounded-t border border-b-0 border-gray-200 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-rose-600 font-extrabold text-sm sm:text-base">
             <Sparkles className="w-5 h-5 fill-rose-600" />
@@ -144,16 +141,18 @@ export const ProductList: React.FC = () => {
         {/* Mobile Filter Toggle */}
         <div className="w-full lg:hidden flex items-center justify-between bg-white p-3 rounded border border-gray-200">
           <button
+            type="button"
             onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-            className="flex items-center gap-2 text-xs font-bold text-[#2874f0]"
+            className="flex items-center gap-2 text-xs font-bold text-[#2874f0] cursor-pointer"
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters ({activeFilterCount})</span>
           </button>
           {activeFilterCount > 0 && (
             <button
+              type="button"
               onClick={resetFilters}
-              className="text-xs text-rose-600 font-semibold hover:underline"
+              className="text-xs text-rose-600 font-semibold hover:underline cursor-pointer"
             >
               Reset All
             </button>
@@ -163,7 +162,7 @@ export const ProductList: React.FC = () => {
         {/* Sidebar Filters */}
         <aside
           id="product-filters-sidebar"
-          className={`w-full lg:w-64 bg-white rounded border border-gray-200 p-4 shadow-sm shrink-0 space-y-5 ${
+          className={`w-full lg:w-64 bg-white rounded border border-gray-200 p-4 shadow-xs shrink-0 space-y-5 ${
             mobileFilterOpen ? 'block' : 'hidden lg:block'
           }`}
         >
@@ -174,9 +173,10 @@ export const ProductList: React.FC = () => {
             </div>
             {activeFilterCount > 0 && (
               <button
+                type="button"
                 id="reset-filters-btn"
                 onClick={resetFilters}
-                className="text-xs text-[#2874f0] hover:text-blue-800 font-semibold flex items-center gap-1"
+                className="text-xs text-[#2874f0] hover:text-blue-800 font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" /> Clear All
               </button>
@@ -241,7 +241,7 @@ export const ProductList: React.FC = () => {
                     className="w-3.5 h-3.5 text-[#2874f0] focus:ring-blue-400"
                   />
                   <span className="flex items-center gap-1 font-medium">
-                    {r}★ & above
+                    {r}★ &amp; above
                   </span>
                 </label>
               ))}
@@ -290,7 +290,7 @@ export const ProductList: React.FC = () => {
         {/* Main Content Area */}
         <main className="flex-1 w-full space-y-4">
           {/* Sorting Toolbar */}
-          <div className="bg-white rounded border border-gray-200 px-4 py-2.5 flex items-center justify-between flex-wrap gap-2 text-xs shadow-sm">
+          <div className="bg-white rounded border border-gray-200 px-4 py-2.5 flex items-center justify-between flex-wrap gap-2 text-xs shadow-xs">
             <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
               <span className="font-bold text-gray-800 shrink-0 uppercase tracking-wider text-[11px]">
                 Sort By
@@ -304,6 +304,7 @@ export const ProductList: React.FC = () => {
               ].map((sortOption) => (
                 <button
                   key={sortOption.id}
+                  type="button"
                   id={`sort-${sortOption.id}`}
                   onClick={() => setFilters((prev) => ({ ...prev, sortBy: sortOption.id as any }))}
                   className={`font-semibold py-1 px-2.5 rounded transition-all whitespace-nowrap cursor-pointer ${
@@ -358,7 +359,7 @@ export const ProductList: React.FC = () => {
           ) : (
             <div 
               id="empty-search-state"
-              className="bg-white rounded border border-gray-200 p-12 text-center space-y-4 shadow-sm"
+              className="bg-white rounded border border-gray-200 p-12 text-center space-y-4 shadow-xs"
             >
               <div className="w-16 h-16 bg-blue-50 text-[#2874f0] rounded-full flex items-center justify-center mx-auto">
                 <Filter className="w-8 h-8" />
@@ -368,9 +369,10 @@ export const ProductList: React.FC = () => {
                 Try adjusting your price range, selecting different categories, or clearing active filters to see all products.
               </p>
               <button
+                type="button"
                 id="empty-state-reset-btn"
                 onClick={resetFilters}
-                className="bg-[#2874f0] hover:bg-blue-700 text-white font-bold px-6 py-2 rounded text-xs uppercase tracking-wider transition-all"
+                className="bg-[#2874f0] hover:bg-blue-700 text-white font-bold px-6 py-2 rounded text-xs uppercase tracking-wider transition-all cursor-pointer"
               >
                 Reset All Filters
               </button>
@@ -380,4 +382,6 @@ export const ProductList: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+ProductList.displayName = 'ProductList';
+

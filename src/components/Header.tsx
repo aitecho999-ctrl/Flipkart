@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
 import { 
   Search, 
@@ -6,23 +6,20 @@ import {
   Heart, 
   Package, 
   Camera, 
-  ShieldCheck, 
   User, 
   ChevronDown, 
   Store, 
   Plus, 
   X,
-  Sparkles,
   Zap
 } from 'lucide-react';
 
-export const Header: React.FC = () => {
+export const Header: React.FC = React.memo(() => {
   const {
     cart,
     wishlist,
     activeTab,
     setActiveTab,
-    filters,
     setFilters,
     setIsImageSearchOpen,
     products,
@@ -33,25 +30,57 @@ export const Header: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
   // Suggestions based on search
-  const suggestions = searchInput.trim()
-    ? products
-        .filter(
-          (p) =>
-            p.title.toLowerCase().includes(searchInput.toLowerCase()) ||
-            p.brand.toLowerCase().includes(searchInput.toLowerCase()) ||
-            p.category.toLowerCase().includes(searchInput.toLowerCase())
-        )
-        .slice(0, 5)
-    : [];
+  const suggestions = useMemo(() => {
+    const q = searchInput.trim().toLowerCase();
+    if (!q) return [];
+    return products
+      .filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.brand.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+      )
+      .slice(0, 5);
+  }, [searchInput, products]);
+
+  // Click outside to close dropdowns & Escape key listener
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSuggestions(false);
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFilters((prev) => ({ ...prev, searchQuery: searchInput }));
     setActiveTab('store');
     setShowSuggestions(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectSuggestion = (product: typeof products[0]) => {
@@ -59,13 +88,14 @@ export const Header: React.FC = () => {
     setActiveTab('product_detail');
     setShowSuggestions(false);
     setSearchInput('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <header className="bg-[#2874f0] text-white sticky top-0 z-40 shadow-md">
       {/* Top Banner Accent */}
       <div className="bg-[#1c54b2] text-[11px] text-blue-100 py-1 px-4 text-center font-medium hidden md:block">
-        ⚡ Super Saver Days: Extra 10% Instant Discount on HDFC & SBI Bank Cards | Free Express Delivery across India
+        ⚡ Super Saver Days: Extra 10% Instant Discount on HDFC &amp; SBI Bank Cards | Free Express Delivery across India
       </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 sm:gap-6">
@@ -75,6 +105,7 @@ export const Header: React.FC = () => {
           onClick={() => {
             setFilters((prev) => ({ ...prev, searchQuery: '', category: 'all' }));
             setActiveTab('store');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           className="flex flex-col cursor-pointer shrink-0 select-none group"
         >
@@ -96,7 +127,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Global Search Bar with Live Suggestions & Visual Search */}
-        <div className="relative flex-1 max-w-2xl">
+        <div ref={searchContainerRef} className="relative flex-1 max-w-2xl">
           <form onSubmit={handleSearchSubmit} className="relative flex items-center">
             <input
               id="global-search-input"
@@ -118,7 +149,7 @@ export const Header: React.FC = () => {
                   setSearchInput('');
                   setFilters((prev) => ({ ...prev, searchQuery: '' }));
                 }}
-                className="absolute right-14 text-gray-400 hover:text-gray-700 p-1"
+                className="absolute right-14 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -130,7 +161,7 @@ export const Header: React.FC = () => {
               id="image-search-trigger-btn"
               title="Search by Product Image"
               onClick={() => setIsImageSearchOpen(true)}
-              className="absolute right-8 text-gray-500 hover:text-[#2874f0] p-1.5 transition-colors"
+              className="absolute right-8 text-gray-500 hover:text-[#2874f0] p-1.5 transition-colors cursor-pointer"
             >
               <Camera className="w-4 h-4" />
             </button>
@@ -139,7 +170,7 @@ export const Header: React.FC = () => {
             <button
               type="submit"
               id="search-submit-btn"
-              className="absolute right-2 text-[#2874f0] hover:text-blue-700 p-1"
+              className="absolute right-2 text-[#2874f0] hover:text-blue-700 p-1 cursor-pointer"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -179,11 +210,12 @@ export const Header: React.FC = () => {
         {/* Action Controls */}
         <div className="flex items-center gap-3 sm:gap-6">
           {/* Account Dropdown */}
-          <div className="relative">
+          <div ref={userMenuRef} className="relative">
             <button
+              type="button"
               id="account-menu-button"
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="bg-white text-[#2874f0] hover:bg-slate-50 font-semibold px-4 py-1.5 rounded-sm text-sm flex items-center gap-1.5 transition-all shadow-sm"
+              className="bg-white text-[#2874f0] hover:bg-slate-50 font-semibold px-4 py-1.5 rounded-sm text-sm flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
             >
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">My Account</span>
@@ -205,24 +237,28 @@ export const Header: React.FC = () => {
                 </div>
 
                 <button
+                  type="button"
                   id="nav-orders-btn"
                   onClick={() => {
                     setActiveTab('orders');
                     setShowUserMenu(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-100 flex items-center gap-2.5"
+                  className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
                 >
                   <Package className="w-4 h-4 text-[#2874f0]" />
                   <span>My Orders</span>
                 </button>
 
                 <button
+                  type="button"
                   id="nav-wishlist-btn"
                   onClick={() => {
                     setActiveTab('wishlist');
                     setShowUserMenu(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-100 flex items-center gap-2.5"
+                  className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-100 flex items-center gap-2.5 cursor-pointer"
                 >
                   <Heart className="w-4 h-4 text-rose-500" />
                   <span>Wishlist ({wishlist.length})</span>
@@ -231,15 +267,17 @@ export const Header: React.FC = () => {
                 <div className="border-t my-1"></div>
 
                 <button
+                  type="button"
                   id="nav-admin-btn"
                   onClick={() => {
                     setActiveTab('admin');
                     setShowUserMenu(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="w-full text-left px-4 py-2 text-xs font-medium text-blue-700 hover:bg-blue-50 flex items-center gap-2.5"
+                  className="w-full text-left px-4 py-2 text-xs font-medium text-blue-700 hover:bg-blue-50 flex items-center gap-2.5 cursor-pointer"
                 >
                   <Store className="w-4 h-4 text-[#2874f0]" />
-                  <span>Seller & Admin Hub</span>
+                  <span>Seller &amp; Admin Hub</span>
                 </button>
               </div>
             )}
@@ -247,9 +285,13 @@ export const Header: React.FC = () => {
 
           {/* Become a Seller / Admin Portal Quick Switch */}
           <button
+            type="button"
             id="seller-hub-quick-btn"
-            onClick={() => setActiveTab(activeTab === 'admin' ? 'store' : 'admin')}
-            className="hidden lg:flex items-center gap-1.5 text-xs font-bold hover:text-amber-300 transition-colors"
+            onClick={() => {
+              setActiveTab(activeTab === 'admin' ? 'store' : 'admin');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="hidden lg:flex items-center gap-1.5 text-xs font-bold hover:text-amber-300 transition-colors cursor-pointer"
           >
             <Store className="w-4 h-4" />
             <span>{activeTab === 'admin' ? 'Customer View' : 'Seller Hub'}</span>
@@ -257,9 +299,13 @@ export const Header: React.FC = () => {
 
           {/* Wishlist Quick Icon */}
           <button
+            type="button"
             id="header-wishlist-icon-btn"
-            onClick={() => setActiveTab('wishlist')}
-            className="relative hidden sm:flex items-center gap-1 hover:text-amber-300 transition-colors font-medium text-xs"
+            onClick={() => {
+              setActiveTab('wishlist');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="relative hidden sm:flex items-center gap-1 hover:text-amber-300 transition-colors font-medium text-xs cursor-pointer"
             title="Wishlist"
           >
             <Heart className="w-4 h-4" />
@@ -273,16 +319,20 @@ export const Header: React.FC = () => {
 
           {/* Cart Icon & Button */}
           <button
+            type="button"
             id="header-cart-button"
-            onClick={() => setActiveTab('cart')}
-            className="flex items-center gap-1.5 font-bold text-sm hover:text-amber-300 transition-colors relative"
+            onClick={() => {
+              setActiveTab('cart');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center gap-1.5 font-bold text-sm hover:text-amber-300 transition-colors relative cursor-pointer"
           >
             <div className="relative">
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
                 <span 
                   id="cart-badge-count"
-                  className="absolute -top-2.5 -right-2.5 bg-[#ffe500] text-blue-900 font-extrabold text-[11px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center shadow"
+                  className="absolute -top-2.5 -right-2.5 bg-[#ffe500] text-blue-900 font-extrabold text-[11px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center shadow-xs"
                 >
                   {cartCount}
                 </span>
@@ -294,4 +344,6 @@ export const Header: React.FC = () => {
       </div>
     </header>
   );
-};
+});
+Header.displayName = 'Header';
+

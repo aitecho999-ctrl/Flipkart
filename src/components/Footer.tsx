@@ -1,9 +1,14 @@
 import React from 'react';
-import { Store, HelpCircle, Gift, Sparkles, ShieldCheck } from 'lucide-react';
+import { Store, HelpCircle, Gift, Sparkles } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
-export const Footer: React.FC = () => {
+export const Footer: React.FC = React.memo(() => {
   const { setActiveTab } = useStore();
+
+  const handleBecomeSeller = () => {
+    setActiveTab('admin');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <footer className="bg-[#172337] text-white text-xs mt-12 border-t border-gray-800">
@@ -38,7 +43,7 @@ export const Footer: React.FC = () => {
           <ul className="space-y-1.5 text-gray-300 text-[11px]">
             <li className="hover:underline cursor-pointer">Payments</li>
             <li className="hover:underline cursor-pointer">Shipping</li>
-            <li className="hover:underline cursor-pointer">Cancellation & Returns</li>
+            <li className="hover:underline cursor-pointer">Cancellation &amp; Returns</li>
             <li className="hover:underline cursor-pointer">FAQ</li>
           </ul>
         </div>
@@ -47,7 +52,7 @@ export const Footer: React.FC = () => {
         <div className="space-y-2.5">
           <h4 className="text-gray-400 font-bold uppercase tracking-wider text-[11px]">CONSUMER POLICY</h4>
           <ul className="space-y-1.5 text-gray-300 text-[11px]">
-            <li className="hover:underline cursor-pointer">Cancellation & Returns</li>
+            <li className="hover:underline cursor-pointer">Cancellation &amp; Returns</li>
             <li className="hover:underline cursor-pointer">Terms Of Use</li>
             <li className="hover:underline cursor-pointer">Security</li>
             <li className="hover:underline cursor-pointer">Privacy</li>
@@ -84,8 +89,9 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-between gap-4 text-[11px] text-gray-400">
         <div className="flex items-center gap-6 flex-wrap">
           <button
-            onClick={() => setActiveTab('admin')}
-            className="flex items-center gap-1.5 text-amber-400 hover:underline font-bold"
+            type="button"
+            onClick={handleBecomeSeller}
+            className="flex items-center gap-1.5 text-amber-400 hover:underline font-bold cursor-pointer"
           >
             <Store className="w-4 h-4 text-amber-400" />
             <span>Become a Seller</span>
@@ -107,4 +113,6 @@ export const Footer: React.FC = () => {
       </div>
     </footer>
   );
-};
+});
+Footer.displayName = 'Footer';
+

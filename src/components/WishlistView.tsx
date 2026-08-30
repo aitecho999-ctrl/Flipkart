@@ -1,16 +1,22 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Heart, Trash2, ShoppingCart, ArrowRight, ShieldCheck, Star } from 'lucide-react';
 
-export const WishlistView: React.FC = () => {
+export const WishlistView: React.FC = React.memo(() => {
   const { wishlist, toggleWishlist, addToCart, setSelectedProduct, setActiveTab } = useStore();
+
+  const handleProductClick = useCallback((product: any) => {
+    setSelectedProduct(product);
+    setActiveTab('product_detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [setSelectedProduct, setActiveTab]);
 
   if (wishlist.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div 
           id="empty-wishlist-state"
-          className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 text-center max-w-lg mx-auto shadow-sm space-y-4"
+          className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 text-center max-w-lg mx-auto shadow-xs space-y-4"
         >
           <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
             <Heart className="w-10 h-10" />
@@ -20,8 +26,12 @@ export const WishlistView: React.FC = () => {
             You have no items in your wishlist. Start adding items you love to keep track of prices and offers!
           </p>
           <button
+            type="button"
             id="empty-wishlist-shop-btn"
-            onClick={() => setActiveTab('store')}
+            onClick={() => {
+              setActiveTab('store');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             className="bg-[#2874f0] hover:bg-blue-700 text-white font-extrabold px-8 py-3 rounded-sm uppercase tracking-wider text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
           >
             <span>Explore Products</span>
@@ -34,7 +44,7 @@ export const WishlistView: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-6">
-      <div className="bg-white rounded border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded border border-gray-200 shadow-xs overflow-hidden">
         <div className="p-4 border-b bg-slate-50 flex items-center justify-between">
           <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
             <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
@@ -46,16 +56,17 @@ export const WishlistView: React.FC = () => {
           {wishlist.map((item) => (
             <div key={item.id} className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
               <div 
-                onClick={() => {
-                  setSelectedProduct(item.product);
-                  setActiveTab('product_detail');
-                }}
+                onClick={() => handleProductClick(item.product)}
                 className="flex items-center gap-4 cursor-pointer group flex-1"
               >
                 <div className="w-20 h-20 bg-gray-50 border rounded p-1 flex items-center justify-center shrink-0">
                   <img
                     src={item.product.image}
                     alt={item.product.title}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&auto=format&fit=crop&q=80';
+                    }}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                   />
                 </div>
@@ -92,19 +103,21 @@ export const WishlistView: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end pt-2 sm:pt-0">
                 <button
+                  type="button"
                   id={`wishlist-move-cart-${item.product.id}`}
                   onClick={() => {
                     addToCart(item.product);
                     toggleWishlist(item.product);
                   }}
-                  className="bg-[#ff9f00] hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-sm text-xs uppercase flex items-center gap-1.5 shadow-sm transition-all"
+                  className="bg-[#ff9f00] hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-sm text-xs uppercase flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                 >
                   <ShoppingCart className="w-4 h-4" /> Move to Cart
                 </button>
                 <button
+                  type="button"
                   id={`wishlist-remove-${item.product.id}`}
                   onClick={() => toggleWishlist(item.product)}
-                  className="p-2 text-gray-400 hover:text-rose-600 rounded hover:bg-gray-100 transition-colors"
+                  className="p-2 text-gray-400 hover:text-rose-600 rounded hover:bg-gray-100 transition-colors cursor-pointer"
                   title="Remove from Wishlist"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -116,4 +129,6 @@ export const WishlistView: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+WishlistView.displayName = 'WishlistView';
+

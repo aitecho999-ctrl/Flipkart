@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 import { useStore } from '../context/StoreContext';
 import { Star, Heart, ShoppingCart, ShieldCheck } from 'lucide-react';
@@ -7,13 +7,15 @@ interface ProductCardProps {
   product: Product;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
   const { setSelectedProduct, setActiveTab, addToCart, toggleWishlist, isInWishlist } = useStore();
   const wishlisted = isInWishlist(product.id);
+  const [imgError, setImgError] = useState(false);
 
   const handleCardClick = () => {
     setSelectedProduct(product);
     setActiveTab('product_detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -34,6 +36,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       {/* Wishlist Button */}
       <button
+        type="button"
         id={`wishlist-btn-${product.id}`}
         onClick={handleToggleWishlist}
         title={wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
@@ -49,8 +52,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Product Image & Badges */}
       <div className="relative w-full pt-[90%] mb-3 overflow-hidden rounded bg-gray-50 flex items-center justify-center">
         <img
-          src={product.image}
+          src={imgError ? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80' : product.image}
           alt={product.title}
+          loading="lazy"
+          onError={() => setImgError(true)}
           className="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
         />
 
@@ -112,6 +117,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {/* Quick Add to Cart Button */}
           <button
+            type="button"
             id={`quick-add-cart-${product.id}`}
             onClick={handleAddToCart}
             title="Add to Cart"
@@ -123,4 +129,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
     </div>
   );
-};
+});
+ProductCard.displayName = 'ProductCard';
+
