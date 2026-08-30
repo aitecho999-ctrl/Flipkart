@@ -3,26 +3,36 @@
   "version": "1.0.0",
   "description": "Full-stack e-commerce platform like Flipkart",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=apps/web\" \"npm run dev --workspace=apps/admin\" \"npm run dev --workspace=apps/api\"",
-    "build": "npm run build --workspaces",
-    "start": "npm run start --workspaces",
-    "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces",
-    "db:migrate": "npm run migrate --workspace=packages/db",
-    "db:generate": "npm run generate --workspace=packages/db",
-    "db:seed": "npm run seed --workspace=packages/db"
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "tsc && vite build",
+    "lint": "tsc --noEmit",
+    "preview": "vite preview --host 0.0.0.0 --port 3000"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^9.0.0",
-    "typescript": "^5.3.3"
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.3.3",
+    "vite": "^8.2.2"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.37.0",
+    "motion": "^13.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwind-merge": "^3.6.0"
   }
 }

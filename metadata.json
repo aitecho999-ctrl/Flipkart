@@ -1,0 +1,8 @@
+{
+  "name": "Flipkart Clone",
+  "description": "Full-stack e-commerce platform featuring customer storefront, product catalog, cart, wishlist, orders, and admin management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
